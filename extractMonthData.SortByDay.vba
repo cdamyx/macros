@@ -117,10 +117,12 @@ Sub filterCopySort(wksht, wksht2, col, arr, usrIn, count, ltrCol)
     'sort on col Z, then delete
     sortWS wksht2
     
+    'formatting each row to be short(wraptext), and each column to be wide enough to display all text(autofit)
     wksht2.Range("A:Z").WrapText = False
+    wksht2.Columns("A:Z").AutoFit
     
     'make main worksheet visible
-    wksht.Activate
+    'wksht.Activate
     
     'clear any filtered rows on main worksheet
     wksht.ShowAllData
@@ -129,7 +131,10 @@ End Sub
 
 Sub main()
     Dim i As Integer
+    Dim j As Integer
+    Dim wsOriginal As Worksheet
     Dim ws As Worksheet
+    Dim wsCopy As Worksheet
     Dim ws2 As Worksheet
     Dim ws3 As Worksheet
     Dim ws4 As Worksheet
@@ -163,9 +168,42 @@ Sub main()
     
     'set i for extract day later
     i = 2
+    j = 2
     
-    'might need to change this. could do Worksheets(1), or activate/activesheet?
-    Set ws = Worksheets("Birthday")
+    'create and activate "Copy", copy data over to "Copy" to run calcs/edits
+    Set wsOriginal = Worksheets("Birthday")
+    createSheet wsOriginal, "Copy"
+    Worksheets("Copy").Activate
+    Set ws = Worksheets("Copy")
+    copyData wsOriginal, ws
+    ws.Range("A:Z").WrapText = False
+    ws.Columns("A:Z").AutoFit
+    
+    'find column of each type of date
+    findColumn ws, colBirthDate, "Birth Date"
+    findColumn ws, colHireDate, "Hire Date"
+    findColumn ws, colRehireDate, "Rehire Date"
+    
+    'convert column number to column letter
+    convertColToLetter colBirthDate, colLetterBirth
+    convertColToLetter colHireDate, colLetterHire
+    convertColToLetter colRehireDate, colLetterRehire
+    
+    'before we really do much of anything, go ahead and copy any rehire dates over to hire date column, highlight, and add comment with original hire date
+    Do While (ws.Range("A" & j).Value <> "")
+        If (ws.Range(colLetterRehire & j).Value <> "") Then
+            'put current value of hire date into a comment
+            ws.Range(colLetterHire & j).AddComment ("Original Hire Date: " + ws.Range(colLetterHire & j).Text)
+            
+            'replace hire date with rehire date and highlight yellow
+            ws.Range(colLetterHire & j).Value = ws.Range(colLetterRehire & j).Value
+            ws.Range(colLetterHire & j).Interior.ColorIndex = 6
+            
+        End If
+        j = j + 1
+    Loop
+    
+    
     
     'createSheet ws, "Rehire Date"
     createSheet ws, "Hire Date"
@@ -177,21 +215,19 @@ Sub main()
     
     'get month from user
     promptForMonth userInput
-
-    'find column of each type of date
-    findColumn ws, colBirthDate, "Birth Date"
-    findColumn ws, colHireDate, "Hire Date"
-    findColumn ws, colRehireDate, "Rehire Date"
     
-    'convert column number to column letter
-    convertColToLetter colBirthDate, colLetterBirth
-    convertColToLetter colHireDate, colLetterHire
-    convertColToLetter colRehireDate, colLetterRehire
+    
     
     'birth date sheet specific
     filterCopySort ws, ws2, colBirthDate, months, userInput, i, colLetterBirth
     
     'hire date sheet specific
     filterCopySort ws, ws3, colHireDate, months, userInput, i, colLetterHire
+    
+    Application.DisplayAlerts = False
+    ws.Delete
+    Application.DisplayAlerts = True
+    
+    wsOriginal.Activate
 
 End Sub
