@@ -10,6 +10,12 @@ Sub findColumn(ws, col, str)
 
 End Sub
 
+Sub convertColToLetter(col, ltrCol)
+
+    ltrCol = Split(Cells(1, col).Address, "$")(1)
+
+End Sub
+
 Sub filterColByMo(ws, col, mo)
 
     'Cells(col).EntireColumn: how to select a whole column by number, i.e., col = 10, so select entire column J
@@ -38,7 +44,7 @@ Sub filterColByMo(ws, col, mo)
     ' 19    xlFilterAllDatesInPeriodQuarter3
     ' 20    xlFilterAllDatesInPeriodQuarter4
     ' 21    xlFilterAllDatesInPeriodJanuary
-    ' 22    xlFilterAllDatesInPeriodFebruray <-February is misspelled
+    ' 22    xlFilterAllDatesInPeriodFebruary
     ' 23    xlFilterAllDatesInPeriodMarch
     ' 24    xlFilterAllDatesInPeriodApril
     ' 25    xlFilterAllDatesInPeriodMay
@@ -54,9 +60,9 @@ Sub filterColByMo(ws, col, mo)
 
 End Sub
 
-Sub createSheet(ws, sheetName)
+Sub createSheet(wksht, sheetName)
 
-    Sheets.Add After:=ws
+    Sheets.Add After:=wksht
     
     ActiveSheet.Name = sheetName
 
@@ -70,7 +76,59 @@ Sub copyData(copyFrom, pasteTo)
 
 End Sub
 
+Sub extractDay(x, ltrCol)
+    
+    Do While (Range(ltrCol & x).Value <> "")
+        divided = Split(Range(ltrCol & x).Value, "/")
+        Range("Z" & x).Value = divided(1)
+
+        x = x + 1
+    Loop
+    
+    x = 2
+
+End Sub
+
+Sub sortWS(wksht)
+
+    wksht.Range("A:Z").Sort Key1:=Range("Z:Z"), Order1:=xlAscending, Header:=xlYes
+
+    Columns("Z").EntireColumn.Delete
+
+End Sub
+
+Sub filterCopySort(wksht, wksht2, col, arr, usrIn, count, ltrCol)
+
+    'turn off filter first to remove filter feature currently enabled on any column
+    wksht.AutoFilterMode = False
+    
+    'make new worksheet active for extract/sort later
+    wksht2.Activate
+    
+    'filter main ws by dates occuring in selected month
+    filterColByMo wksht, col, arr(usrIn)
+    
+    'Copy the filtered data over to new sheet
+    copyData wksht, wksht2
+    
+    'take day out of date and place in col Z
+    extractDay count, ltrCol
+    
+    'sort on col Z, then delete
+    sortWS wksht2
+    
+    wksht2.Range("A:Z").WrapText = False
+    
+    'make main worksheet visible
+    wksht.Activate
+    
+    'clear any filtered rows on main worksheet
+    wksht.ShowAllData
+
+End Sub
+
 Sub main()
+    Dim i As Integer
     Dim ws As Worksheet
     Dim ws2 As Worksheet
     Dim ws3 As Worksheet
@@ -79,6 +137,9 @@ Sub main()
     Dim colBirthDate As Integer
     Dim colHireDate As Integer
     Dim colRehireDate As Integer
+    Dim colLetterBirth As String
+    Dim colLetterHire As String
+    Dim colLetterRehire As String
     Dim months(1 To 12) As Integer
     
     'array to change month to filter criteria value used by VBA
@@ -95,6 +156,13 @@ Sub main()
     months(11) = 31
     months(12) = 32
     
+    'switch to this array and use loops, when finished
+    'colNames(0) = "Birth Date"
+    'colNames(1) = "Hire Date"
+    'colNames(2) = "Rehire Date"
+    
+    'set i for extract day later
+    i = 2
     
     'might need to change this. could do Worksheets(1), or activate/activesheet?
     Set ws = Worksheets("Birthday")
@@ -115,13 +183,15 @@ Sub main()
     findColumn ws, colHireDate, "Hire Date"
     findColumn ws, colRehireDate, "Rehire Date"
     
-    filterColByMo ws, colBirthDate, months(userInput)
+    'convert column number to column letter
+    convertColToLetter colBirthDate, colLetterBirth
+    convertColToLetter colHireDate, colLetterHire
+    convertColToLetter colRehireDate, colLetterRehire
     
-    copyData ws, ws2
+    'birth date sheet specific
+    filterCopySort ws, ws2, colBirthDate, months, userInput, i, colLetterBirth
     
-    'MsgBox ("Birth " + CStr(colBirthDate) + ", " + "Hire " + CStr(colHireDate) + ", " + "Rehire " + CStr(colRehireDate))
-    
-    'Note for later: explicitly select sheet, then manipulate with ActiveSheet: do Worksheets(1).Activate to make sheet 1 _
-    the selected sheet, then use ActiveSheet with various commands to manipulate
+    'hire date sheet specific
+    filterCopySort ws, ws3, colHireDate, months, userInput, i, colLetterHire
 
 End Sub
