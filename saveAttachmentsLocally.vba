@@ -39,8 +39,10 @@ Sub Pause(Seconds As Single)
     Wend
 End Sub
 
-Sub printCertainAttachments()
-    Dim toPrint As MAPIFolder
+Sub main()
+    'save all attachements to designated path
+    Dim eomRPTG As MAPIFolder
+    Dim savePath As String
     Dim Item As MailItem
     Dim Atmt As Attachment
     Dim extension As String
@@ -67,11 +69,14 @@ Sub printCertainAttachments()
     username = (Environ$("Username"))
     
     'Set folder one sublevel below Inbox
-    Set toPrint = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg")
+    Set eomRPTG = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg")
     'Set folder one sublevel below EOM rptg
-    Set Printed = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg").Folders("COMPLETED")
+    Set complete = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg").Folders("COMPLETED")
+
+    'prompt user for save path - default should be set to last used
     
     'Before we start the loop, need to clear the contents of the log file from the previous print job
+    'Need to change log file path in function - prompt for save path, move variables to main function and pass
     clearLogFile username
     
     'Outer loop that iterates through every email in the TO PRINT folder has to go in reverse since we're moving an email at the end of every loop to the "PRINTED" folder, _
