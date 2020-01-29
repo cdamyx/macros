@@ -11,3 +11,6 @@ snippet originally created before extractMonthData.SortByDay.vba
 
 ### saveAttachmentsLocally.vba
 Grab all attachments of emails in a particular Outlook folder and save them to a local path
+
+### promptPath.vba
+prompt user for path, save to registry. Use registry value for default path.
