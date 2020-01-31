@@ -12,4 +12,4 @@ snippet originally created before extractMonthData.SortByDay.vba
 prompt user for path, save to registry. Use registry value for default path.
 
 ### saveAtmtToFolder
-Grab all attachments of emails in a particular Outlook folder and save them to a path
+Grab all attachments of emails in a particular Outlook folder and save them to a path. Trying to make more modular for everyone to use
