@@ -1,21 +1,29 @@
 
 Sub promptPath(usrPath)
     'prompt user for path, save to registry. Use registry value for default path.
-    'need error checking on path, i.e., backslash has to be on end
+    'if path does not end with backslash, add it on there
     Dim defaultPath As String
     
     defaultPath = GetSetting("saveAtmtMacro", "pathPrompt", "path")
 
     usrPath = InputBox(prompt:="Please enter path to save", Default:=defaultPath)
     
-    If Path <> "" Then
+    If usrPath <> "" Then
         SaveSetting "saveAtmtMacro", "pathPrompt", "path", usrPath
     End If
     
 End Sub
 
+Sub checkBackslash(usrPath, fullPath)
+    
+    If Right(usrPath, 1) <> "\" Then
+        fullPath = usrPath + "\" + "vbaText.txt"
+    Else
+        fullPath = usrPath + "vbaText.txt"
+    End If
 
 
+End Sub
 
 Sub saveAtmtToFolder()
 
@@ -30,8 +38,11 @@ Sub saveAtmtToFolder()
 
     promptPath usrPath
 
+    checkBackslash usrPath, fullPath
+    
     'test save something to path
-    fullPath = usrPath + "vbaText.txt"
+    'if error (i.e. path does not exist) goTo message box
+    'fullPath = usrPath + "vbaText.txt"
     primaryFolder.Items(1).Attachments(1).SaveAsFile fullPath
 
 
