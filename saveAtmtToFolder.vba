@@ -25,10 +25,23 @@ Sub checkBackslash(usrPath, fullPath)
 
 End Sub
 
-Sub createFullPath(fileName, Atmt, fullPath)
+Sub createFullPathWithFile(fileName, Atmt, fullPath, fullPathWithFile)
 
     fileName = Atmt.fileName
-    fullPath = fullPath + fileName
+    fullPathWithFile = fullPath + fileName
+
+End Sub
+
+Sub getExtension(fileName, extension)
+
+    splitArray = Split(fileName, ".")
+    extension = LCase(splitArray(UBound(splitArray)))
+
+End Sub
+
+Sub checkIfExists()
+
+
 
 End Sub
 
@@ -38,6 +51,7 @@ Sub saveAtmtToFolder()
     Dim completedFolder As MAPIFolder
     Dim usrPath As String
     Dim fullPath As String
+    Dim fullPathWithFile As String
     Dim Item As MailItem
     Dim Atmt As Attachment
     Dim fileName As String
@@ -59,35 +73,34 @@ Sub saveAtmtToFolder()
         'Nested loop iterates through all of the attachments in a single email
         For Each Atmt In Item.Attachments
     
-            createFullPath fileName, Atmt, fullPath
+            createFullPathWithFile fileName, Atmt, fullPath, fullPathWithFile
             
-            splitArray = Split(fileName, ".")
-            extension = LCase(splitArray(UBound(splitArray)))
+            getExtension fileName, extension
             
             'need to check if file exists
             
             If extension = "xlsx" Then
                 'excelCount = excelCount + 1
-                Atmt.SaveAsFile fullPath
+                Atmt.SaveAsFile fullPathWithFile
             ElseIf extension = "csv" Then
                 'csvCount = csvCount + 1
-                Atmt.SaveAsFile fullPath
+                Atmt.SaveAsFile fullPathWithFile
             ElseIf extension = "pdf" Then
                 'pdfCount = pdfCount + 1
-                Atmt.SaveAsFile fullPath
+                Atmt.SaveAsFile fullPathWithFile
             ElseIf extension = "txt" Then
                 'txtCount = txtCount + 1
                 'get rid of txt elseif after testing is finished
-                Atmt.SaveAsFile fullPath
+                Atmt.SaveAsFile fullPathWithFile
             Else
                 'log: could not print attachment
                 'MsgBox ("error, not good ext")
             End If
+            
         
         Next
     Item.Move completedFolder
     Next
-    'primaryFolder.Items(1).Attachments(1).SaveAsFile fullPath
 
     Set primaryFolder = Nothing
 
