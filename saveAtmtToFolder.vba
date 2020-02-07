@@ -35,13 +35,24 @@ End Sub
 Sub getExtension(fileName, extension)
 
     splitArray = Split(fileName, ".")
+    plainName = LCase(splitArray(LBound(splitArray)))
     extension = LCase(splitArray(UBound(splitArray)))
 
 End Sub
 
-Sub checkIfExists()
+Sub checkIfExists(fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension)
 
+    fileExistence = Dir(fullPathWithFile)
 
+    If fileExistence <> "" Then
+        'plainName not working correctly from getExtension function above, troubleshoot
+        'fileName = plainName + "1" + extension
+        fileName = "1" & fileName
+        fullPathWithFile = fullPath & fileName
+        checkIfExists fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension
+        'left off here, recursion works, but file save happens multiple times
+        MsgBox fullPathWithFile
+    End If
 
 End Sub
 
@@ -55,7 +66,9 @@ Sub saveAtmtToFolder()
     Dim Item As MailItem
     Dim Atmt As Attachment
     Dim fileName As String
+    Dim plainName As String
     Dim extension As String
+    Dim fileExistence As String
 
     Set primaryFolder = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg")
     Set completedFolder = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg").Folders("COMPLETED")
@@ -78,6 +91,7 @@ Sub saveAtmtToFolder()
             getExtension fileName, extension
             
             'need to check if file exists
+            checkIfExists fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension
             
             If extension = "xlsx" Then
                 'excelCount = excelCount + 1
