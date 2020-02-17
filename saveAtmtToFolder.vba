@@ -32,7 +32,7 @@ Sub createFullPathWithFile(fileName, Atmt, fullPath, fullPathWithFile)
 
 End Sub
 
-Sub getExtension(fileName, extension)
+Sub getExtension(fileName, plainName, extension)
 
     splitArray = Split(fileName, ".")
     plainName = LCase(splitArray(LBound(splitArray)))
@@ -41,17 +41,15 @@ Sub getExtension(fileName, extension)
 End Sub
 
 Sub checkIfExists(fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension)
-
+    'handy recursive function for future use
     fileExistence = Dir(fullPathWithFile)
 
     If fileExistence <> "" Then
-        'plainName not working correctly from getExtension function above, troubleshoot
-        'fileName = plainName + "1" + extension
-        fileName = "1" & fileName
+        'first rename works great, second rename gives error "stack out of space". Clean this up
+        fileName = plainName & Format(Date, "mmddyy") & "." & extension
         fullPathWithFile = fullPath & fileName
+        
         checkIfExists fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension
-        'left off here, recursion works, but file save happens multiple times
-        MsgBox fullPathWithFile
     End If
 
 End Sub
@@ -70,29 +68,35 @@ Sub saveAtmtToFolder()
     Dim extension As String
     Dim fileExistence As String
 
+    'set folders to run this program on - would be nice to let user choose this too
     Set primaryFolder = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg")
     Set completedFolder = GetNamespace("MAPI").GetDefaultFolder(olFolderInbox).Folders("EOM rptg").Folders("COMPLETED")
     
-    'log file for items moved
+    'add in: log file for items moved
 
+    'prompt user for save path
     promptPath usrPath
 
+    'if backslash not present at end of path, add it
     checkBackslash usrPath, fullPath
     
-    'if error (i.e. path does not exist) goTo message box
+    'add in: if error (i.e. path does not exist) goTo message box
     
+    'loop through each email in EOM rptg folder, then through each attachment of the current email
     For i = primaryFolder.Items.Count To 1 Step -1
         Set Item = primaryFolder.Items(i)
-        'Nested loop iterates through all of the attachments in a single email
         For Each Atmt In Item.Attachments
     
+            'makes path + filename text string
             createFullPathWithFile fileName, Atmt, fullPath, fullPathWithFile
             
-            getExtension fileName, extension
+            'separates and saves filename and extension
+            getExtension fileName, plainName, extension
             
-            'need to check if file exists
+            'if file already exists, rename it with date
             checkIfExists fullPathWithFile, fileExistence, fullPath, fileName, plainName, extension
             
+            'save file
             If extension = "xlsx" Then
                 'excelCount = excelCount + 1
                 Atmt.SaveAsFile fullPathWithFile
@@ -102,17 +106,13 @@ Sub saveAtmtToFolder()
             ElseIf extension = "pdf" Then
                 'pdfCount = pdfCount + 1
                 Atmt.SaveAsFile fullPathWithFile
-            ElseIf extension = "txt" Then
-                'txtCount = txtCount + 1
-                'get rid of txt elseif after testing is finished
-                Atmt.SaveAsFile fullPathWithFile
             Else
-                'log: could not print attachment
-                'MsgBox ("error, not good ext")
+                'add in log: could not print attachment
             End If
             
         
         Next
+    'move email to completed folder
     Item.Move completedFolder
     Next
 
