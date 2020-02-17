@@ -107,7 +107,7 @@ Sub saveAtmtToFolder()
                 'pdfCount = pdfCount + 1
                 Atmt.SaveAsFile fullPathWithFile
             Else
-                'add in log: could not print attachment
+                'add in: log - could not print attachment
             End If
             
         
